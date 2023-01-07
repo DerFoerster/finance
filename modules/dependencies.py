@@ -81,7 +81,7 @@ def autoCorrelation( charts, fouriertransformed, singlekeyvalues ):
 def correlationMatrix( charts ):
     numberofcharts = len(charts)
     
-    accessmask     = np.chararray(( numberofcharts, numberofcharts, 2 )) # alows to identify values of correlationmatrix with the two corresponding indices
+    accessmask     = np.chararray(( numberofcharts, numberofcharts, 2 ))       # alows to identify values of correlationmatrix with the two corresponding indices
     
     pearson        = np.zeros(( numberofcharts, numberofcharts ))   
     spearman       = np.zeros(( numberofcharts, numberofcharts ))   
@@ -89,20 +89,21 @@ def correlationMatrix( charts ):
     
     # compute the correlations dismiss p values
     #__________________________________________________________________________
-    j = 0 #for storing the correlations into ndarray: j column index
+    j = 0                                                                      # for storing the correlations into ndarray: j column index
     for index1 in charts:
-        i = 0 #for storing the correlations into ndarray: i row index
-        for index2 in charts: #maybe use a dictionars accessing the correlations between chart1 and chart2 as pearson[chart1][chart2]
+        i = 0                                                                  # for storing the correlations into ndarray: i row index
+        for index2 in charts:                                                  # maybe use a dictionars accessing the correlations between chart1 and chart2 as pearson[chart1][chart2]
+        
             # correcting size-differences of charts
             #__________________________________________________________________          
             existence       = np.minimum( np.size( charts[index1] ), np.size( charts[index2] ) ) # length of shorter chart
-            firstexistence  = np.size( charts[index1] ) - existence #charts are sorted from old to new. 
-            secondexistence = np.size( charts[index2] ) - existence #selecting all values from the first day of recording of the younger chart           
+            firstexistence  = np.size( charts[index1] ) - existence            # charts are sorted from old to new. 
+            secondexistence = np.size( charts[index2] ) - existence            # selecting all values from the first day of recording of the younger chart           
             
             pearson  [i,j]  = st.pearsonr  ( 
                                             charts[index1].iloc[firstexistence:], 
                                             charts[index2].iloc[secondexistence:] 
-                                            )[0] #charts are sorted from last to newest
+                                            )[0]                               # charts are sorted from last to newest
             spearman [i,j]  = st.spearmanr( 
                                             charts[index1].iloc[firstexistence:], 
                                             charts[index2].iloc[secondexistence:] 
@@ -122,7 +123,7 @@ def correlationMatrix( charts ):
     
 # correlationSets ( dictionary: charts, chararray: accessmask, ndarray: correlations, real: minimalcorr ) = dictionary: poscorrset, negcorrset
 ##############################################################################
-# : 
+# Generation of highly correlated subset A and another highly correlated B with corr(A,B) is negative
 """
 def correlationSets ( charts, accessmask, correlations, minimalcorr=0.8 ):
     poscorrset = {}

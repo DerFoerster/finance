@@ -73,7 +73,10 @@ ausgabe mit datum
 ###############################################################################
 """
 directory    = "stocks/"    
-data, charts = readFile( directory )
+
+data,        \
+charts,      \
+volumes      = readFile( directory )
 
 x            = range( 0, np.size( charts["dax40"] ) )
 plt.plot(x,charts["dax40"])
@@ -84,11 +87,11 @@ plt.plot(y,charts["sp500"])
 
 """
 maxchart     = 10*np.min( charts["dax40"] )
-maxvolume    = np.max(          data["stock_dax40"]["Volume"] )
+maxvolume    = np.max(          data["dax40"]["Volume"] )
 
-y            = range( 0, np.size( charts["dax40_volume"] ) )
+y            = range( 0, np.size( volumes["dax40"] ) )
 
-yimage       = charts["dax40_volume"]
+yimage       = volumes["dax40"]
 
 yimage      *= maxchart/maxvolume
 plt.plot(y,yimage)
@@ -128,7 +131,7 @@ image       = givePlots( histogram, histkeyvalues,  5 )
 # Test of maximal jumps
 ###############################################################################    
 ###############################################################################
-#"""
+"""
 directory    = "stocks/"  
   
 data,        \
@@ -140,7 +143,7 @@ jumps        = getJumps( data )
 
 maxjumps     = maximalJumps( jumps )
 #print(maxjumps)
-#"""
+
 histogram,   \
 histpos,     \
 histneg      = makeHistogram( maxjumps )
@@ -152,7 +155,7 @@ negkeyvalues = determineValues( histneg )
 image       = givePlots( histneg, negkeyvalues,  5 ) #binweite anpassen
 
 image       = givePlots( histogram, histkeyvalues,  5 )
-#"""
+"""
 
 
 
@@ -234,8 +237,9 @@ plt.show()
 ###############################################################################
 """
 directory    = "stocks/"    
-data,   \
-charts, \
+
+data,        \
+charts,      \
 volumes      = readFile( directory )
 
 singlekeyvalues         = determineValues ( charts )
@@ -245,18 +249,18 @@ topreduced_fourier,     \
 bottomreduced_fourier,  \
 itensityreduced_fourier = computeFouriertrafo( charts )
 
-#autocorrelations        = autoCorrelation(charts, fourier, singlekeyvalues)
+autocorrelations       = autoCorrelation(charts, fourier, singlekeyvalues)
 
-#x            = range(0,np.size(autocorrelations["dax40"]))
-#plt.plot(x,autocorrelations["dax40"])
+x            = range(0,np.size(autocorrelations["dax40"]))
+plt.plot(x,autocorrelations["dax40"])
 
-pearson,  \
-spearman, \
-kendall = correlationMatrix( charts )
+pearson,     \
+spearman,    \
+kendall      = correlationMatrix( charts )
 
-printHeatmap( pearson )
-printHeatmap( spearman )
-printHeatmap( kendall )
+#printHeatmap( pearson )
+#printHeatmap( spearman )
+#printHeatmap( kendall )
 
 #print(pearson)
 #print(kendall)
@@ -264,151 +268,3 @@ printHeatmap( kendall )
 """
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""Old structure with open and close instead on working with the whole chart
-directory    = "stocks/"    
-data, charts = readFile( directory, ".csv" )
-
-reductioncoef= 0.99
-reductionval = 100
-
-
-fourier      = computeFouriertrafo( data , reductioncoef, reductionval )
-
-x            = range(0,np.size(data["stock_dax40"]["Open"]))
-plt.plot(x,data["stock_dax40"]["Open"], label="original chart")
-
-y            = range(0,np.size(fourier["dax40_open_top_reducedfourier"]))
-#plt.plot(y,np.abs(fourier["dax40_open_top_reducedfourier"]), label="top reduced: >= "+str(reductioncoef)+"*maxfrequency")
-
-z            = range(0,np.size(fourier["dax40_open_bottom_reducedfourier"]))
-plt.plot(z,np.abs(fourier["dax40_open_bottom_reducedfourier"]), label="absolute of bottom reduced: <= "+str(reductioncoef)+"*maxfrequency")
-plt.plot(z,fourier["dax40_open_bottom_reducedfourier"].real, label="real of bottom reduced: <= "+str(reductioncoef)+"*maxfrequency")
-plt.plot(z,fourier["dax40_open_bottom_reducedfourier"].imag, label="imaginary of bottom reduced: <= "+str(reductioncoef)+"*maxfrequency")
-
-a            = range(0,np.size(fourier[ "dax40_open_itensity_reducedfourier" ])) 
-#plt.plot(a,np.abs(fourier["dax40_open_itensity_reducedfourier"]), label="itensity reduced: <="+str(reductionval) )
-
-#plt.plot(x,np.abs(fourier["dax40_open_discretefourier"]))
-
-plt.legend()
-plt.show()
-"""
-
-
-
-"""
-
-
-
-
-# fitDistribution ( data, real: minimum, real: maximum, real: binwidth, ax=None )
-##############################################################################
-# :
- 
-def fitDistribution(data, minimum, maximum, binwidth=20):#, ax=None):
-    "Model data by finding best fit distribution to data"
-    # Get histogram of original data
-    y, x = np.histogram(data,  bins=range( int(minimum),int(maximum),binwidth),  density=True)
-    x = (x + np.roll(x, -1))[:-1] / 2.0
-
-    # Best holders
-    bestdistributions = []
-
-    #open parallel computing
-    with Pool() as pool:
-        
-        distributionlist = enumerate([d for d in _distn_names if not d in ['levy_stable', 'studentized_range']])
-        
-        for distribution in pool.map( fastFitting(data, distributionlist, x, y) ):
-            
-            sse, params = fastFitting( data, distribution, x, y )
-            
-            # identify if this distribution is better
-            bestdistributions.append((distribution, params, sse))
-    
-    return sorted(bestdistributions, key=lambda x:x[2])
-   
-   
-
-
-
-
-
-
-
-
-# fastFitting ( data, real: minimum, real: maximum, real: binwidth, ax=None )
-##############################################################################
-# :
-
-def fastFitting( data, distribution, x, y ): 
-
-        # Estimate distribution parameters from data
-    
-        print(distribution, " is tested.")
-        print(type(distribution))
-        #distribution = getattr(st, distribution)
-        #print(type(data))
-        #params = distribution.fit(data)
-        # Try to fit the distribution
-#        try:
-            # Ignore warnings from data that can't be fit
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore')
-            #print("1")
-            # fit dist to data
-            params = distribution.fit(data)
-            #print(params)
-            # Separate parts of parameters
-            arg   = params[:-2]
-            loc   = params[-2]
-            scale = params[-1]
-            
-            # Calculate fitted PDF and error with fit in distribution
-            pdf   = distribution.pdf(x, loc=loc, scale=scale, *arg)
-            sse   = np.sum(np.power(y - pdf, 2.0))
-                
-                # if axis pass in add to plot
-#                try:
-#                    if ax:
-#                        pd.Series(pdf, x).plot(ax=ax)
-#                    end
-#                except Exception:
-#                    pass
-
-#        except Exception:
-            #print(Exception)
-#            pass
-            
-        return sse, params
-    
-
-
-
-
-
-
-
-
-
-"""

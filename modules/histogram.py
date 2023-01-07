@@ -30,15 +30,15 @@ from multiprocessing import Pool
 
 # getJumps ( dictionary: rawdata ) = dictionary: jumps
 ##############################################################################
-# :
-# 
-# histogram:  dictionary containing objects named after red in stock-data with ordered vectors
-# close_i /= open_i+1
+# Computes jumps between availiable data.
+# rawdata: unedited data from csv of chart
+# jumps:   all jumps on timegrid   
+
 def getJumps( rawdata ):  # _ between the name of the stock/datafile and the data is needes in the plotfunction below!
     jumps = {}  #contains all kind of evaluable jumps.
     
-    for index in rawdata: #iterates over index - an element of dictionary rawdata
-       #nameofstock = index.replace("stock_", "")     
+    for index in rawdata: 
+  
        
        # afternoon-Morning
        #_______________________________________________________________________
@@ -63,35 +63,38 @@ def getJumps( rawdata ):  # _ between the name of the stock/datafile and the dat
 
 # maximalJumps ( dictionary: jumps ) = dictionary: maxjumps
 ##############################################################################
-# jumps: cictionary with unsorted jumps of charts. 
+# Computes jumps between consecutive extremal points 
+# jumps:    time-ordered daily jumps of charts
+# maxjumps: monotonous differences/jumps
 
 def maximalJumps( jumps ):
-    maxjumps  = {}  #contains all kind of evaluable jumps.
-
+    maxjumps  = {}                                                             #contains all kind of evaluable jumps.
     jumparray = []
        
-    for index in jumps:                        # sum jumps up as long as sign doesnt change. 
+    for index in jumps:                                                       
 
         indexsize = np.size( jumps[ index ] )
         
+        # initialize sign and value of first jump
+        #______________________________________________________________________        
         oldsign   = np.sign( jumps[ index ][0] )
         oldjump   =          jumps[ index ][0]
         
         for i in range( 1, indexsize ):      
             
-            if np.sign( jumps[ index ][ i ] ) == oldsign:       # sum jumps up as long as sign doesnt change.  expects strictly monotonous changing series
-                #print("huhuhuhuhuhu")
+            # summation of all jumps with same sign
+            #__________________________________________________________________
+            if np.sign( jumps[ index ][ i ] ) == oldsign:                      # sum jumps up as long as sign doesnt change.  expects strictly monotonous changing series
                 oldjump  += jumps[index][i]  
+            # storing maximal jump and reinicialize summation if sign of daily jump changes
+            #__________________________________________________________________
             else:
-                jumparray.append( oldjump )    #if sign of jumps change: write actual sum into maxjumps[index]    
-                oldjump  = jumps[ index ][ i ] # initialize new
-                oldsign   = np.sign( jumps[index][i] ) # set new sign
-                
-        maxjumps[ index ] = np.array( jumparray )
+                jumparray.append( oldjump )                                    # if sign of jumps change: write actual sum into maxjumps[index]    
+                oldjump   = jumps[ index ][ i ]                                 # initialize new
+                oldsign   = np.sign( jumps[index][i] )                         # set new sign
         
-        oldjump = 0 # and start new summation
-           
-        #print( maxjumps[index] )
+        #  overgive maximal jumps as numpy array
+        maxjumps[ index ] = np.array( jumparray )
         
     return maxjumps
 
@@ -102,12 +105,14 @@ def maximalJumps( jumps ):
 
 
 
-# makeHistogram ( dictionary: jumps ) = dictionary: data
+# makeHistogram ( dictionary: jumps ) = dictionary: histogram, dictionary: histpos, dictionary: histneg
 ##############################################################################
-# :
-# 
-# histogram:  dictionary containing objects named after red in stock-data with ordered vectors
-# close_i /= open_i+1
+# Precomputes histogram data for later use
+# jumps:      data that shall be analyzed as histogram
+# histogram:  contains all jumps
+# histpos:    contains just positive jumps for evaluation
+# histneg:    contains just negative jumps
+
 def makeHistogram( jumps ):  # _ between the name of the stock/datafile and the data is needes in the plotfunction below!
     histogram = {} #total histogram
     histpos   = {} #histogram of positive jumps
@@ -137,8 +142,12 @@ def makeHistogram( jumps ):  # _ between the name of the stock/datafile and the 
 
 
 
-# makeHistogram ( dictionary: charts ) = dictionary: singlekeyvalues
+# determineValues ( dictionary: charts ) = dictionary: singlekeyvalues
 ##############################################################################
+# computes important real values for description of data
+# charts:   
+# singlekeyvalues:
+    
 def determineValues( charts ):
     singlekeyvalues = {}
     
@@ -159,14 +168,21 @@ def determineValues( charts ):
 
 
 
-# fitDistribution ( data, real: minimum, real: maximum, real: binwidth, ax=None )
+# fitDistribution ( dictionary: data, real: minimum, real: maximum, real: binwidth, ax=None ) = list: bestdistributions
 ##############################################################################
 # Model data by finding best fit distribution to data
+# data
+# minimum: is needed for generation of density
+# maximum: is needed for generation of density
+# binwidth
+# ax
+# bestdistributions: contains distributions together with error sorted such that distribution with minimal error comes first
  
-def fitDistribution(data, minimum, maximum, binwidth=20):#, ax=None):
+def fitDistribution( data, minimum, maximum, binwidth=20 ):#, ax=None):
     print("\n\nStart fitting process:\n")
     
     # Get histogram of original data
+    #__________________________________________________________________________
     y, x = np.histogram(
                          data,  
                          bins = range( 
@@ -180,64 +196,71 @@ def fitDistribution(data, minimum, maximum, binwidth=20):#, ax=None):
     x = (x + np.roll(x, -1))[:-1] / 2.0
 
     # Best holders
+    #__________________________________________________________________________
     bestdistributions = []
 
     # Estimate distribution parameters from data
+    #__________________________________________________________________________
     for ii, distribution in enumerate([d for d in _distn_names if not d in ['levy_stable', 'studentized_range']]):
+        
         print( "   " + "{:>3} / {:<3}: {}".format( ii+1, len(_distn_names), distribution ))
 
         distribution = getattr(st, distribution)
-        #print(type(data))
-        #params = distribution.fit(data)
+        
+        
         # Try to fit the distribution
+        #______________________________________________________________________
         try:
             # Ignore warnings from data that can't be fit
+            #__________________________________________________________________
             with warnings.catch_warnings():
                 warnings.filterwarnings('ignore')
-                #print("1")
+ 
                 # fit dist to data
+                #______________________________________________________________
                 params = distribution.fit(data)
-                #print(params)
+
                 # Separate parts of parameters
+                #______________________________________________________________
                 arg   = params[:-2]
                 loc   = params[-2]
                 scale = params[-1]
                 
                 # Calculate fitted PDF and error with fit in distribution
+                #______________________________________________________________
                 pdf   = distribution.pdf(x, loc=loc, scale=scale, *arg)
                 sse   = np.sum(np.power(y - pdf, 2.0))
+                
 # for testing purposes                
-#                if ii >= 5:
-#                    return sorted(bestdistributions, key=lambda x:x[2])
-#                    break
+                if ii >= 5:
+                    return sorted(bestdistributions, key=lambda x:x[2])
+                    break
 #"""                
-                # if axis pass in add to plot
-#                try:
-#                    if ax:
-#                        pd.Series(pdf, x).plot(ax=ax)
-#                    end
-#                except Exception:
-#                    pass
 
                 # identify if this distribution is better
+                #______________________________________________________________
                 bestdistributions.append((distribution, params, sse))
 
         except Exception:
             print(Exception)
             pass
 
-    return sorted(bestdistributions, key=lambda x:x[2])
+    return sorted( bestdistributions, key=lambda x:x[2] )
 
 
 
 
 
-# makeDensity ( data, real: minimum, real: maximum, real: binwidth, ax=None ) = 
+# makeDensity ( dist, real: minimum, real: maximum, real: binwidth, ax=None ) = 
 ###############################################################################
-# :
+# Generates density of overgiven distribution
+# dist distribution
+# minimum: lower bound from which on y-vector of density values will be generated
+# maximum: upper bound
+# binwidth
+# ax
 
 def makeDensity( dist, params, minimum, maximum, size=1000 ):
-    #Generate distributions's Probability Distribution Function """
 
     # Separate parts of parameters
     arg   = params[:-2]
@@ -263,30 +286,3 @@ def makeDensity( dist, params, minimum, maximum, size=1000 ):
 
     return pdf, q99, q90, q75, q50, q25, q10
 
-
-""" Old structure with too specific-hardcodes names. Now computable trough determineValues( histpos / histneg / histogram )
-       # computes single key datas for analyzing  jumps
-       #_______________________________________________________________________      
-       jumps[ nameofstock+"_values" ]     = {   
-                                              "minimum":      np.min(jumps[ nameofstock+"_combination" ]), 
-                                              "maximum":      np.max(jumps[ nameofstock+"_combination" ]), 
-                                              "median":       np.median(jumps[ nameofstock+"_combination" ]), 
-                                              "mean":         np.mean(jumps[ nameofstock+"_combination" ]),  #expectancy
-                                              "deviation":    dev,  #standard deviation
-                                              "variance":     dev**2, #secondmoment
-                                         
-                                              "minimum_pos":      np.min(jumps[ nameofstock+"_histogram_positive" ]), 
-                                              "maximum_pos":      np.max(jumps[ nameofstock+"_histogram_positive" ]), 
-                                              "median_pos":       np.median(jumps[ nameofstock+"_histogram_positive" ]), 
-                                              "mean_pos":         np.mean(jumps[ nameofstock+"_histogram_positive" ]),  #expectancy
-                                              "deviation_pos":    dev,  #standard deviation
-                                              "secondmoment_pos": dev**2, #variance
-                                              
-                                              "minimum_neg":      np.min(jumps[ nameofstock+"_histogram_negative" ]), 
-                                              "maximum_neg":      np.max(jumps[ nameofstock+"_histogram_negative" ]), 
-                                              "median_neg":       np.median(jumps[ nameofstock+"_histogram_negative" ]), 
-                                              "mean_neg":         np.mean(jumps[ nameofstock+"_histogram_negative" ]),  #expectancy
-                                              "deviation_neg":    dev,  #standard deviation
-                                              "secondmoment_neg": dev**2 #variance                                              #"thirdmomend": , #skewness
-                                              } 
-"""
