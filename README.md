@@ -4,9 +4,13 @@ ToDos:
           Use more panda Dataframe              -> branch pandaization
           Compute for several charts parallel   -> branch parallelization
           Implement own datatype for sde-models -> branch typization
+          Functions for singe index             -> branch singleization
+          
           Implement Black-Scholes as exercise   -> branch sde -> black_scholes
           Implement ARCH for application        -> branch sde -> garch
           Implement GoGARCH or CoGARCH          -> branch sde -> cogarch
+
+          Implement analysis of variance        -> branch test -> variance          
           
      Theoretical
 	  Implement Black-Scholes as exercise
