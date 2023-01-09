@@ -178,8 +178,9 @@ def determineValues( charts ):
 # ax
 # bestdistributions: contains distributions together with error sorted such that distribution with minimal error comes first
  
-def fitDistribution( data, minimum, maximum, binwidth=20 ):#, ax=None):
-    print("\n\nStart fitting process:\n")
+def fitDistribution( data, minimum, maximum, binwidth=20, progres=False ):#, ax=None):
+    if progres:
+        print("\n\nStart fitting process:\n")
     
     # Get histogram of original data
     #__________________________________________________________________________
@@ -203,7 +204,8 @@ def fitDistribution( data, minimum, maximum, binwidth=20 ):#, ax=None):
     #__________________________________________________________________________
     for ii, distribution in enumerate([d for d in _distn_names if not d in ['levy_stable', 'studentized_range']]):
         
-        print( "   " + "{:>3} / {:<3}: {}".format( ii+1, len(_distn_names), distribution ))
+        if progres:
+            print( "   " + "{:>3} / {:<3}: {}".format( ii+1, len(_distn_names), distribution ))
 
         distribution = getattr(st, distribution)
         
@@ -242,10 +244,9 @@ def fitDistribution( data, minimum, maximum, binwidth=20 ):#, ax=None):
                 bestdistributions.append((distribution, params, sse))
 
         except Exception:
-            print(Exception)
             pass
 
-    return sorted( bestdistributions, key=lambda x:x[2] )
+    return sorted( bestdistributions, key=lambda x:x[2] )#[0]                   #overgive just best fitting distribution [0]
 
 
 
@@ -260,7 +261,7 @@ def fitDistribution( data, minimum, maximum, binwidth=20 ):#, ax=None):
 # binwidth
 # ax
 
-def makeDensity( dist, params, minimum, maximum, size=1000 ):
+def makeDensity( dist, params, minimum, maximum, size=1000, quantiles=True ):
 
     # Separate parts of parameters
     arg   = params[:-2]
@@ -270,19 +271,24 @@ def makeDensity( dist, params, minimum, maximum, size=1000 ):
     # Get sane start and end points of distribution
     start = minimum#max(dist.ppf(0, *arg, loc=loc, scale=scale) if arg else dist.ppf(0, loc=loc, scale=scale), minimum)
     end   = maximum#min(dist.ppf(1, *arg, loc=loc, scale=scale) if arg else dist.ppf(1, loc=loc, scale=scale), maximum)
-    
-    # Get quantiles of distribution
-    q99   = dist.ppf(0.99, *arg, loc=loc, scale=scale) if arg else dist.ppf(0.99, loc=loc, scale=scale)
-    q90   = dist.ppf(0.90, *arg, loc=loc, scale=scale) if arg else dist.ppf(0.90, loc=loc, scale=scale)   
-    q75   = dist.ppf(0.75, *arg, loc=loc, scale=scale) if arg else dist.ppf(0.75, loc=loc, scale=scale)
-    q50   = dist.ppf(0.50, *arg, loc=loc, scale=scale) if arg else dist.ppf(0.50, loc=loc, scale=scale)
-    q25   = dist.ppf(0.25, *arg, loc=loc, scale=scale) if arg else dist.ppf(0.25, loc=loc, scale=scale)
-    q10   = dist.ppf(0.10, *arg, loc=loc, scale=scale) if arg else dist.ppf(0.10, loc=loc, scale=scale)
-    
+
     # Build PDF and turn into pandas Series
     x     = np.linspace(start, end, size)
     y     = dist.pdf(x, loc=loc, scale=scale, *arg)
     pdf   = pd.Series(y, x)
+    
+    if quantiles:
+        # Get quantiles of distribution
+        q99   = dist.ppf(0.99, *arg, loc=loc, scale=scale) if arg else dist.ppf(0.99, loc=loc, scale=scale)
+        q90   = dist.ppf(0.90, *arg, loc=loc, scale=scale) if arg else dist.ppf(0.90, loc=loc, scale=scale)   
+        q75   = dist.ppf(0.75, *arg, loc=loc, scale=scale) if arg else dist.ppf(0.75, loc=loc, scale=scale)
+        q50   = dist.ppf(0.50, *arg, loc=loc, scale=scale) if arg else dist.ppf(0.50, loc=loc, scale=scale)
+        q25   = dist.ppf(0.25, *arg, loc=loc, scale=scale) if arg else dist.ppf(0.25, loc=loc, scale=scale)
+        q10   = dist.ppf(0.10, *arg, loc=loc, scale=scale) if arg else dist.ppf(0.10, loc=loc, scale=scale)
+        
+        return pdf, q99, q90, q75, q50, q25, q10
+    
 
-    return pdf, q99, q90, q75, q50, q25, q10
+
+    return pdf
 

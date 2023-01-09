@@ -212,7 +212,8 @@ def givePlots( histogram, keyvalues, binwidth=20, epsilon=0.05 ):
                                                histogram[ index ], 
                                                minimum,
                                                maximum, 
-                                               binwidth
+                                               binwidth,
+                                               progres=True
                                                )
 
         bestdist  = ordereddistibutions[0]
