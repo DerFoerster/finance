@@ -74,7 +74,7 @@ ausgabe mit datum
 # parameters
 #______________________________________________________________________________
 directory    = "stocks/"  
-interval     =  500
+interval     =  8
 
 # reading and extracting jumps
 #______________________________________________________________________________  
@@ -119,7 +119,7 @@ for index in jumps:
        poskeyvalues  = determineValues( histpos ) #maybe gives one that the histogram changes but not the variance of the jumps
        negkeyvalues  = determineValues( histneg )
        
-       histkeyvalues = determineValues( { index : jumps[index][i:(i+1)*interval ] } )                               # keyvalues of last N jumps#
+       histkeyvalues = determineValues( { index : jumps[index][ i : i+interval ] } )                               # keyvalues of last N jumps#
 #       poskeyvalues  = determineValues( histpos )
 #       negkeyvalues  = determineValues(        { index : jumps[index][i:(i+1)*interval ] } )       
        # storing variances of interval
@@ -205,12 +205,12 @@ for index in jumps:
     
     y = range( 0, np.size( volumes[index] ) )
 
-    plt.figure()
+#    plt.figure()
     plt.plot( x, variancevector )
 #    plt.plot( x, posvarvector )
 #    plt.plot( x, negvarvector )
     
-    plt.plot( y, charts[index] )
+#    plt.plot( y, charts[index] )
     
     plt.title( "variances of {} in intervals of size {}".format( index, interval ) )
     plt.show()
