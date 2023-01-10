@@ -303,24 +303,17 @@ plt.show()
 # Test of Arch
 ###############################################################################    
 ###############################################################################
+"""
+directory = "stocks/"  
+interval  = 100  
 
-daxclose = np.array([
-13914.07,
-14097.82,
-13884.66,
-13942.87,
-13893.07,
-13986.23,
-14460.20,
-14497.89,
-14306.63,
-14370.72,
-14264.56,
-14261.19,
-14343.19,
-14447.61,
-14529.39
-])
+data,     \
+charts,   \
+volumes   = readFile( directory )
+
+daxlength = np.size( charts["dax40"] )
+
+daxclose  = charts["dax40"][ daxlength-100 :  ]
 
 plt.figure()
 for i in range(1,1000):
@@ -334,3 +327,47 @@ for i in range(1,1000):
                     )    
     plt.plot( x, y )
 plt.show()
+"""
+
+
+# Test of RArch
+###############################################################################    
+###############################################################################
+"""
+# Parameters
+directory = "stocks/"  
+interval  = 100  
+
+# Reading file
+data,     \
+charts,   \
+volumes   = readFile( directory )
+
+# Get jumps
+
+
+# Compute distribution of histogram
+histogram,   \
+histpos,     \
+histneg      = makeHistogram( jumps )
+
+histkeyvalues= determineValues( histogram )
+
+# Extract initial data
+daxlength = np.size( charts["dax40"] )
+daxclose  = charts["dax40"][ daxlength-100 :  ]
+
+#compute 1000 testruns and print
+plt.figure()
+for i in range(1,1000):
+    print(i)
+    x, y = sdeArch( 
+                    volatility  = 1, 
+                    u0          = daxclose, 
+                    dt          = 0.001, 
+                    tmin        = 0, 
+                    tmax        = 1 
+                    )    
+    plt.plot( x, y )
+plt.show()
+"""
