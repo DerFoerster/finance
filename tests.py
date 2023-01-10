@@ -11,6 +11,7 @@ from modules.inout import *
 from modules.histogram  import *
 from modules.smoothers import *
 from modules.dependencies import *
+from modules.models import *
 
 # general modules
 import os
@@ -259,3 +260,77 @@ kendall      = correlationMatrix( charts )
 #print(kendall)
 #print(spearman)
 """
+
+
+
+"""
+# Test of Black-Scholes
+###############################################################################    
+###############################################################################
+plt.figure()
+for i in range(1,1000):
+    x, y = sdeBlackScholes( 
+                            expectancy = 1, 
+                            volatility  = 1, 
+                            u0          = 10, 
+                            dt          = 0.0001, 
+                            tmin        = 0, 
+                            tmax        = 1 
+                            )    
+    plt.plot( x, y )
+plt.show()
+
+
+
+# Test of Ornstein-Uhlenbeck
+###############################################################################    
+###############################################################################
+plt.figure()
+for i in range(1,1000):
+    x, y = sdeOrnsteinUhlenbeck( 
+                            expectancy = 1, 
+                            volatility  = 1, 
+                            u0          = 10, 
+                            dt          = 0.0001, 
+                            tmin        = 0, 
+                            tmax        = 1 
+                            )    
+    plt.plot( x, y )
+plt.show()
+"""
+
+
+# Test of Arch
+###############################################################################    
+###############################################################################
+
+daxclose = np.array([
+13914.07,
+14097.82,
+13884.66,
+13942.87,
+13893.07,
+13986.23,
+14460.20,
+14497.89,
+14306.63,
+14370.72,
+14264.56,
+14261.19,
+14343.19,
+14447.61,
+14529.39
+])
+
+plt.figure()
+for i in range(1,1000):
+    print(i)
+    x, y = sdeArch( 
+                    volatility  = 1, 
+                    u0          = daxclose, 
+                    dt          = 0.001, 
+                    tmin        = 0, 
+                    tmax        = 1 
+                    )    
+    plt.plot( x, y )
+plt.show()
