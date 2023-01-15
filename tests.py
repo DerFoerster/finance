@@ -333,10 +333,11 @@ plt.show()
 # Test of RArch
 ###############################################################################    
 ###############################################################################
-"""
+# weights are not fitted
+
 # Parameters
 directory = "stocks/"  
-interval  = 100  
+interval  = 1
 
 # Reading file
 data,     \
@@ -344,30 +345,66 @@ charts,   \
 volumes   = readFile( directory )
 
 # Get jumps
+jumps        = getJumps( data )
 
-
-# Compute distribution of histogram
+# Compute histogram
 histogram,   \
 histpos,     \
 histneg      = makeHistogram( jumps )
 
-histkeyvalues= determineValues( histogram )
+# get variance and stuff
+histkeyvalues  = determineValues( histogram )
+chartkeyvalues = determineValues( charts )
+
+"""
+# Fit distribution to histogram
+ordereddistibutions = fitDistribution( 
+                                        charts["dax40"],#histogram    ["dax40"], 
+                                        chartkeyvalues["dax40"]["minimum"],#histkeyvalues["dax40"]["minimum"],
+                                        chartkeyvalues["dax40"]["minimum"],#histkeyvalues["dax40"]["maximum"], 
+                                        binwidth = 50,
+                                        progres  = True
+                                        )       
+bestdist  = ordereddistibutions[0]
+
+paramname = (bestdist[0].shapes + ', loc, scale').split(', ') if bestdist[0].shapes else ['loc', 'scale']
+paramets  = ', '.join(['{}={:0.2f}'.format(k,v) for k,v in zip(paramname, bestdist[1])])
+
+print( '{}({})'.format(bestdist[0].name, paramets) )
+"""# Outcome of fitting:
+# for jumps:  dgamma(a=0.45, loc=-0.00, scale=82.62)
+# for charts: ksone(n=1.00, loc=-586.89, scale=16858.64)
+# part of scipy.stats
+# for jumps:  dgamma.rvs(a, loc=0, scale=1, size=1)
+# for charts: ksone(n=1.00, loc=-586.89, scale=16858.64)
+
+
+#x = range(-100, 100)
+#print( x, scp.stats.dgamma.pdf(x, a=0.45, loc=-0.00, scale=82.62))
 
 # Extract initial data
 daxlength = np.size( charts["dax40"] )
-daxclose  = charts["dax40"][ daxlength-100 :  ]
+daxclose  = charts["dax40"][ daxlength-interval :  ]
+
+#plt.figure()
+#plt.plot( range(0,1000), daxclose)
+#plt.show()
+#print(chartkeyvalues["dax40"]["mean"])
 
 #compute 1000 testruns and print
 plt.figure()
-for i in range(1,1000):
+
+for i in range(1,50):
     print(i)
-    x, y = sdeArch( 
-                    volatility  = 1, 
-                    u0          = daxclose, 
-                    dt          = 0.001, 
-                    tmin        = 0, 
-                    tmax        = 1 
+    x, y = sdeRarch( 
+                    volatility   = histkeyvalues["dax40"]["variance"], 
+                    initialvalues= daxclose, 
+                    weights      = np.ones(interval),
+                    w0           = chartkeyvalues["dax40"]["mean"], # use initial/old volatility as w0 and add a minimal changed new one one could use deviation instead and then instead of adding first and tage sqrt: add after sqrt or make geometric mean
+                    dt           = 0.001, 
+                    tmin         = 0, 
+                    tmax         = 10 
                     )    
     plt.plot( x, y )
 plt.show()
-"""
+

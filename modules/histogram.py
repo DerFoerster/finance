@@ -234,9 +234,9 @@ def fitDistribution( data, minimum, maximum, binwidth=20, progres=False ):#, ax=
                 sse   = np.sum(np.power(y - pdf, 2.0))
                 
 # for testing purposes                
-                if ii >= 5:
-                    return sorted(bestdistributions, key=lambda x:x[2])
-                    break
+#                if ii >= 20: # for all jumps of dax40 dgamma(a=0.45, loc=-0.00, scale=82.62) is the best fitting and it is number 18
+#                    return sorted(bestdistributions, key=lambda x:x[2])
+#                    break
 #"""                
 
                 # identify if this distribution is better
