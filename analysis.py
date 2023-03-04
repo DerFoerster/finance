@@ -67,7 +67,62 @@ ausgabe mit datum
 """
  
 
+# Change in histogram over moving intervals
+###############################################################################    
+###############################################################################
+samples      = 1000
+directory    = "stocks/"  
+  
+data,        \
+charts,      \
+volumes      = readFile( directory )
+
+jumps        = getJumps( data )
 
 
+
+for i in range(2*samples, np.size(jumps["dax40"]), samples ):
+    print(i)
+    histogram,   \
+    histpos,     \
+    histneg      = makeHistogram( {"dax40": jumps["dax40"][ i : i+samples ] } )
+        
+    params = scp.stats.dgamma.fit( histogram["dax40"] ) 
+#    arg    = params[:-2]
+#    loc    = params[ -2]
+#    scale  = params[ -1]
+  
+    histkeyvalues = determineValues( histogram )
+#    poskeyvalues = determineValues( histpos )
+#    negkeyvalues = determineValues( histneg )
+  
+    pdf, q99, q90, q75, q50, q25, q10 \
+           = makeDensity( 
+                          scp.stats.dgamma, 
+                          params,
+                          -100,#histkeyvalues["dax40"]["minimum"],
+                          100#histkeyvalues["dax40"]["maximum"]
+                          )    
+           
+    #plt.figure()
+    paramname = (scp.stats.dgamma.shapes + ', loc, scale').split(', ') if scp.stats.dgamma.shapes else ['loc', 'scale']
+    paramets  = ', '.join(['{}={:0.2f}'.format(k,v) for k,v in zip(paramname, params)])
+    distname  = '{}{}({})'.format(scp.stats.dgamma.name, paramets, i)
+
+    plt.hist(jumps["dax40"][ i : i+samples ], bins=200, label=str(i) )   
+    plt.legend()   
+    plt.show()
+    #counts, bins = np.histogram(jumps["dax40"][ i : i+samples ])
+    #plt.hist(bins[:-1], bins, weights=counts)
+"""    pdf.plot( 
+              linewidth       = 2, 
+              label           = distname, 
+              legend          = True, 
+              antialiased     = True,
+#              color           = 'black',
+              )"""
+
+#    image       = givePlots( histneg, negkeyvalues ) #binweite anpassen   
+#    image       = givePlots( histogram, histkeyvalues )
 
 

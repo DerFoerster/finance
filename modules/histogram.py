@@ -178,7 +178,7 @@ def determineValues( charts ):
 # ax
 # bestdistributions: contains distributions together with error sorted such that distribution with minimal error comes first
  
-def fitDistribution( data, minimum, maximum, binwidth=20, progres=False ):#, ax=None):
+def fitDistribution( data, minimum, maximum, binwidth=5, progres=False ):#, ax=None):
     if progres:
         print("\n\nStart fitting process:\n")
     

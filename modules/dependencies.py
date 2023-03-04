@@ -81,7 +81,8 @@ def autoCorrelation( charts, fouriertransformed, singlekeyvalues ):
 def correlationMatrix( charts ):
     numberofcharts = len(charts)
     
-    accessmask     = np.chararray(( numberofcharts, numberofcharts, 2 ))       # alows to identify values of correlationmatrix with the two corresponding indices
+    accessmask     = np.chararray(( numberofcharts, numberofcharts, 2 ))       # map: correlationmatrix(i,j) -> index_i , index_j
+    accessdic      = {}                                                        # map: index_i , index_j      ->       i ,       j
     
     pearson        = np.zeros(( numberofcharts, numberofcharts ))   
     spearman       = np.zeros(( numberofcharts, numberofcharts ))   
@@ -112,8 +113,9 @@ def correlationMatrix( charts ):
                                             charts[index1].iloc[firstexistence:], 
                                             charts[index2].iloc[secondexistence:] 
                                             )[0]    
-            accessmask[i][j][1] = index1
+            accessmask[i][j][0] = index1
             accessmask[i][j][1] = index2
+            accessdic.update({ index1+"_"+index2: [i, j] })
         
             i +=1
         j +=1    
@@ -124,6 +126,7 @@ def correlationMatrix( charts ):
 # correlationSets ( dictionary: charts, chararray: accessmask, ndarray: correlations, real: minimalcorr ) = dictionary: poscorrset, negcorrset
 ##############################################################################
 # Generation of highly correlated subset A and another highly correlated B with corr(A,B) is negative
+# surprisingly efficient, problem: can give you just one elemental subsets if matrix/graph is badly structured
 """
 def correlationSets ( charts, accessmask, correlations, minimalcorr=0.8 ):
     poscorrset = {}
@@ -131,7 +134,7 @@ def correlationSets ( charts, accessmask, correlations, minimalcorr=0.8 ):
     
     workcorr   = correlations #create working copy
     
-    workcorr[ workcorr < 0.8 ] = 0 # cutting all edges of corrgraph if correlation between charts is too small
+    workcorr[ workcorr < minimalcorr ] = 0 # cutting all edges of corrgraph if correlation between charts is too small
     
     for i in range( 1, size( workcorr[0] ) ):
         for j in range( 1, size( workcorr[0] ) ):
@@ -142,3 +145,21 @@ def correlationSets ( charts, accessmask, correlations, minimalcorr=0.8 ):
     for index1 in charts:
 """        
 
+
+
+# correlationSets ( dictionary: charts, chararray: accessmask, ndarray: correlations, real: minimalcorr ) = dictionary: poscorrset, negcorrset
+##############################################################################
+# Generation of highly correlated subset A and another highly correlated B with corr(A,B) is negative
+# generic but inefficient
+"""
+def correlationSets ( charts, accessmask, correlations, minimalcorr=0.8 ):
+    poscorrset = {}
+    negcorrset = {}
+    
+    workcorr   = correlations #create working copy
+    
+    #workcorr[ workcorr < minimalcorr ] = 0 # cutting all edges of corrgraph if correlation between charts is too small
+    
+    maxi = np.maximum(  workcorr )
+    np.argwhere( maxi )
+"""
