@@ -255,6 +255,9 @@ def sdeRarch( volatility, initialvalues, weights, w0, dt, tmin, tmax, distributi
     return time[:steps-1], u[:steps-1]
 
 
+
+
+
 """
 def sdeRarch_1( volatility, initialvalues, weights, w0, dt, tmin, tmax ):      
 # volatility * normalised jumpdistribution ( const over time )
@@ -439,6 +442,77 @@ def sdeRarch_4( volatility, initialvalues, weights, w0, dt, tmin, tmax ):
     
     return time, u[length:]
 """
+
+
+def sdeRarch_5( volatility, 
+                initialvalues, 
+                weights, 
+                w0, 
+                dt, 
+                tmin, 
+                tmax, 
+                jumpdistribution   =scp.stats.dgamma, arg=0.45, loc=0.00, scale=82.62,
+#                minmaxdistribution =
+                ):      
+# kind of BS
+# accept jump if it fits in the min-max-jump distribution
+# means if distribution between old extreme values is as in the chart
+# refit of distributions after some jumps is deactivated
+
+    # initialise
+    #__________________________________________________________________________ 
+    time        = np.arange( tmin, tmax, dt)     
+    steps       = np.size( time )
+
+    length      = np.size( initialvalues )
+    
+#    print( "total count of steps is: {} \ mean length is: {}".format( steps, length ))
+    
+    u           = np.zeros( length + steps )
+    u[0:length] = initialvalues
+    
+    sigma       = volatility      # initialise rolling mean
+    sigma       = np.sqrt( sigma )
+    
+    # generate initial distribution
+    #__________________________________________________________________________
+
+    dW          = jumpdistribution.rvs(a=arg, loc=loc, scale=scale) #scp.stats.dgamma.rvs(a=0.45, loc=-0.00, scale=82.62) length = n is possible
+    
+    # compute time series
+    #__________________________________________________________________________    
+    for i in range( length, steps-1 ):
+
+        # Varying of mu
+        ui  = u[ i-length : i ]
+
+        mu  = np.sum ( weights[0:np.size(ui)] * ui )                           #mean
+        mu /= (length)
+        
+        # Timestep
+        u[i]   =   mu + dW
+
+        # new sigma
+        sigma  = np.sum ( weights[0:np.size(ui)] * ui * ui )
+        sigma += w0
+        sigma  = np.sqrt( sigma ) 
+        
+        # storing old sigma
+        w0    = sigma # maybe 
+        
+        # Update random number (maybe update distribution in sense of loc and scale also)
+        dW     =  jumpdistribution.rvs( a=arg, loc=loc, scale=scale )#scp.stats.dgamma.rvs(a=0.45, loc=-0.00, scale=82.62)
+
+#        if i%100 == 0:           
+#            jumps = np.zeros(i)
+#            for j in range(1,i):
+#                jumps[j] = u[j]-u[j-1]
+#            params = jumpdistribution.fit( jumps )#scp.stats.dgamma.fit( ui )
+#            arg    = params[:-2]
+#            loc    = params[ -2]
+#            scale  = params[ -1]
+
+    return time[:steps-1], u[:steps-1]
 
 
 """ General trial

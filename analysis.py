@@ -67,8 +67,94 @@ correlationsmatrix
 ausgabe mit datum
 """
 
-#
+# min-max-distribution
 ###############################################################################
 ###############################################################################
 
+"""
+directory    = "stocks/"  
+  
+data,        \
+charts,      \
+volumes      = readFile( directory )
+jumps        = getJumps( data )
+#print(jumps)
+maxjumps     = maximalJumps( jumps )
+#print(maxjumps)
+histogram,   \
+histpos,     \
+histneg      = makeHistogram( maxjumps )
+histkeyvalues= determineValues( histogram )
+poskeyvalues = determineValues( histpos )
+negkeyvalues = determineValues( histneg )
+image       = givePlots( histneg, negkeyvalues,  5 ) #binweite anpassen
+image       = givePlots( histogram, histkeyvalues,  5 )
+"""
+
+# log-log-histogram
+###############################################################################
+###############################################################################
+
+
+directory    = "stocks/"  
+  
+data,        \
+charts,      \
+volumes      = readFile( directory )
+jumps        = getJumps( data )
+
+histogram,   \
+histpos,     \
+histneg      = makeHistogram( jumps )
+
+loghistneg = { 'dax40': np.log(-histneg['dax40'][histneg['dax40']!=0]) }
+loghistpos    = { 'dax40': np.log(histpos['dax40'][histpos['dax40']!=0]) }
+
+histkeyvalues= determineValues( histogram )
+poskeyvalues = determineValues( histpos )
+negkeyvalues = determineValues( histneg )
+
+lognegkeyvalues = determineValues( loghistneg )
+logposkeyvalues = determineValues( loghistpos )
+
+
+image       = givePlots( loghistneg, lognegkeyvalues,  35,  continuous=True, logarithm=True, name="negative " )
+image       = givePlots( loghistpos, logposkeyvalues,  35,  continuous=True, logarithm=True, name="positive " )
+
+image       = givePlots( histneg, negkeyvalues,  2,  continuous=True, logarithm=False, name="negative " ) 
+image       = givePlots( histpos, poskeyvalues,  2,  continuous=True, logarithm=False, name="positive " )
+
+
+# log-log-maxjump-histogram
+###############################################################################
+###############################################################################
+
+"""
+directory    = "stocks/"  
+  
+data,        \
+charts,      \
+volumes      = readFile( directory )
+jumps        = getJumps( data )
+#print(jumps)
+maxjumps     = maximalJumps( jumps )
+#print(maxjumps)
+histogram,   \
+histpos,     \
+histneg      = makeHistogram( maxjumps )
+
+loghistneg = { 'dax40': -np.log(-histneg['dax40'][histneg['dax40']<0]) }
+loghist    = { 'dax40': -np.log(-histogram['dax40'][histogram['dax40']!=0]) }
+
+histkeyvalues= determineValues( histogram )
+poskeyvalues = determineValues( histpos )
+negkeyvalues = determineValues( histneg )
+
+lognegkeyvalues = determineValues( loghistneg )
+logkeyvalues    = determineValues( loghistneg )
+
+
+image       = givePlots( histneg, lognegkeyvalues,  5,  continuous=False, logarithm=True  ) #binweite anpassen
+image       = givePlots( loghist, logkeyvalues,  5, logarithm=True, continuous=False )
+"""
 

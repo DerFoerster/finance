@@ -92,7 +92,7 @@ def readFile( directory, ending=".csv"  ):
 # :
 # plt.hist(x, bins=None, range=None, density=False, weights=None, cumulative=False, bottom=None, histtype='bar', align='mid', orientation='vertical', rwidth=None, log=False, color=None, label=None, stacked=False, *, data=None, **kwargs)
 
-def givePlots( histogram, keyvalues, binwidth=20, epsilon=0.05 ):
+def givePlots( histogram, keyvalues, binwidth=20, epsilon=0.05, continuous=True, logarithm=False, name="" ):
     
     for index in histogram: 
         
@@ -106,25 +106,88 @@ def givePlots( histogram, keyvalues, binwidth=20, epsilon=0.05 ):
         # general settings
         #__________________________________________________________________           
         plt.figure( figsize=(24,16) )                                                        #new plot, otherwise all will be in one plot
-        plt.title( "Histogram of jumps of " + index + "." )
+        plt.title( "Histogram of " + name + "jumps of " + index + "." )
+        
+        # create bins
+        if( logarithm ):
+            print( maximum )
+            actualbins = np.arange(  
+                                int( minimum ),  
+                                int( maximum ),  
+                                0.0005*binwidth,
+                                dtype=np.float
+                                ) 
+        else:
+            actualbins = range(  
+                                int( minimum ),  
+                                int( maximum ),  
+                                binwidth
+                                )
         
         # plot histogram
         #__________________________________________________________________ 
         amountofjumps, jumpheight, z \
         = plt.hist( histogram[ index ], 
-                    bins     =range(  
-                                     int( minimum ),  
-                                     int( maximum ),  
-                                     binwidth
-                                     ),   
+                    bins     = actualbins,   
                     histtype = 'bar', 
                     density  = True, 
                     label    = "amount of jump heights",
-                    color    = list( plt.rcParams['axes.prop_cycle'] )[0]['color']
+                    color    = list( plt.rcParams['axes.prop_cycle'] )[0]['color'],
+                    log      = logarithm,
                     ) 
 
 
 
+
+
+                                                    
+        # find best fitting distribution
+        #__________________________________________________________________
+        if( continuous ):
+            ordereddistibutions = fitDistribution( 
+                                                   histogram[ index ], 
+                                                   minimum,
+                                                   maximum, 
+                                                   binwidth,
+                                                   progres=True
+                                                   )
+    
+            bestdist  = ordereddistibutions[0]
+            paramname = (bestdist[0].shapes + ', loc, scale').split(', ') if bestdist[0].shapes else ['loc', 'scale']
+            paramets  = ', '.join(['{}={:0.2f}'.format(k,v) for k,v in zip(paramname, bestdist[1])])
+            distname  = '{}({})'.format(bestdist[0].name, paramets)
+            
+            # plot best fitting distribution
+            #__________________________________________________________________           
+            pdf, q99, q90, q75, q50, q25, q10 \
+            = makeDensity( 
+                           bestdist[0], 
+                           bestdist[1],
+                           minimum,
+                           maximum
+                           )
+            
+            #nameofdist = filter(lambda a: bestdist[0] in a, _distn_names)
+            
+            pdf.plot( 
+                      linewidth       = 2, 
+                      label           = distname, 
+                      legend          = True, 
+                      antialiased     = True,
+                      color           = 'black'
+                      )
+            plt.legend(  bbox_to_anchor=( 0.8*epsilon, 0.7) )
+            #print(bestdist[0].name)
+            
+            # plot quantiles
+            #___________________________________________________________________
+            for quantile in [q99, q90, q75, q50, q25, q10, -q10, -q25, -q50, -q75, -q90, -q99]:
+                plt.axvline(
+                             x        = np.log(quantile),
+                             ymax     = 1,#0.25*np.max(amountofjumps),
+                             linestyle='dotted'
+                             )     
+"""
         # limit & settings of axes
         #__________________________________________________________________  
         ymaximum = np.max(amountofjumps)
@@ -204,60 +267,12 @@ def givePlots( histogram, keyvalues, binwidth=20, epsilon=0.05 ):
                   " standard deviation: ".format( int( keyvalues[ index ][ "deviation" ]))
                   +"\n"+
                   " variance: {}".format( int( keyvalues[ index][ "variance" ]))
-                  )                                                            # todo x and y automatically
-
-        # find best fitting distribution
-        #__________________________________________________________________
-        ordereddistibutions = fitDistribution( 
-                                               histogram[ index ], 
-                                               minimum,
-                                               maximum, 
-                                               binwidth,
-                                               progres=True
-                                               )
-
-        bestdist  = ordereddistibutions[0]
-        paramname = (bestdist[0].shapes + ', loc, scale').split(', ') if bestdist[0].shapes else ['loc', 'scale']
-        paramets  = ', '.join(['{}={:0.2f}'.format(k,v) for k,v in zip(paramname, bestdist[1])])
-        distname  = '{}({})'.format(bestdist[0].name, paramets)
-        
-        # plot best fitting distribution
-        #__________________________________________________________________           
-        pdf, q99, q90, q75, q50, q25, q10 \
-        = makeDensity( 
-                       bestdist[0], 
-                       bestdist[1],
-                       minimum,
-                       maximum
-                       )
-        
-        #nameofdist = filter(lambda a: bestdist[0] in a, _distn_names)
-        
-        pdf.plot( 
-                  linewidth       = 2, 
-                  label           = distname, 
-                  legend          = True, 
-                  antialiased     = True,
-                  color           = 'black'
-                  )
-        plt.legend(  bbox_to_anchor=( 0.8*epsilon, 0.7) )
-        #print(bestdist[0].name)
-        
-        # plot quantiles
-        #___________________________________________________________________
-        for quantile in [q99, q90, q75, q50, q25, q10, -q10, -q25, -q50, -q75, -q90, -q99]:
-            plt.axvline(
-                         x        = quantile,
-                         ymax     = 1,#0.25*np.max(amountofjumps),
-                         linestyle='dotted'
-                         )           
-                    
-           
+                  )    
+                                                        # todo x and y automatically"""      
 
            
 
-
-
+              
 
 
 

@@ -19,6 +19,11 @@ import numpy as np
 import scipy as scp
 import pandas as pd
 import matplotlib.pyplot as plt
+from multiprocessing import Pool
+os.system("taskset -p 0xff %d" % os.getpid())
+
+import time
+#import multiprocessing
 
 
 """ 
@@ -334,6 +339,7 @@ plt.show()
 ###############################################################################    
 ###############################################################################
 # weights are not fitted
+# how does dirst change if one varies interval ( [t,t+h] or [t_1. t_2] ) and are jumps stationary or independent?
 
 # Parameters
 directory = "stocks/"  
@@ -392,11 +398,11 @@ daxclose  = charts["dax40"][ daxlength-interval :  ]
 #print(chartkeyvalues["dax40"]["mean"])
 
 #compute 1000 testruns and print
-plt.figure()
-
+     
+plt.figure()  
 for i in range(1,50):
     print(i)
-    x, y = sdeRarch( 
+    x, y = sdeRarch_5( 
                     volatility   = histkeyvalues["dax40"]["variance"], 
                     initialvalues= daxclose, 
                     weights      = np.ones(interval),
@@ -407,4 +413,5 @@ for i in range(1,50):
                     )    
     plt.plot( x, y )
 plt.show()
+
 

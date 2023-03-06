@@ -125,11 +125,11 @@ def makeHistogram( jumps ):  # _ between the name of the stock/datafile and the 
        
        # Makes histogram of all positive jumps
        #_______________________________________________________________________      
-       histpos[ index ] = histogram[ index ][ histogram[ index ]>=0 ]
+       histpos[ index ] = histogram[ index ][ histogram[ index ]>0 ]
               
        # Makes histogram of all negative jumps
        #_______________________________________________________________________       
-       histneg[ index ] = histogram[ index ][ histogram[ index ]<=0 ]                   
+       histneg[ index ] = histogram[ index ][ histogram[ index ]<0 ]                   
 
     return histogram, histpos, histneg
 
@@ -195,7 +195,7 @@ def fitDistribution( data, minimum, maximum, binwidth=20, progres=False ):#, ax=
                          )
     
     x = (x + np.roll(x, -1))[:-1] / 2.0
-
+    
     # Best holders
     #__________________________________________________________________________
     bestdistributions = []
@@ -233,11 +233,11 @@ def fitDistribution( data, minimum, maximum, binwidth=20, progres=False ):#, ax=
                 pdf   = distribution.pdf(x, loc=loc, scale=scale, *arg)
                 sse   = np.sum(np.power(y - pdf, 2.0))
                 
-# for testing purposes                
-#                if ii >= 20: # for all jumps of dax40 dgamma(a=0.45, loc=-0.00, scale=82.62) is the best fitting and it is number 18
-#                    return sorted(bestdistributions, key=lambda x:x[2])
-#                    break
-#"""                
+#                for testing purposes                
+                if ii >= 22: # for all jumps of dax40 dgamma(a=0.45, loc=-0.00, scale=82.62) is the best fitting and it is number 18
+                    return sorted(bestdistributions, key=lambda x:x[2])
+                    break
+              
 
                 # identify if this distribution is better
                 #______________________________________________________________
